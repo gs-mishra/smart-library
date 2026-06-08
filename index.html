@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="QR-code based smart library management system with Firebase Firestore and LocalStorage capability.">
+  <title>Smart Library - QR-Based Portal</title>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Core Design CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Firebase SDK Compatibility Libraries (Compat versions) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  
+  <!-- QRCode.js and html5-qrcode CDNs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+
+  <!-- ========================================== -->
+  <!-- 1. HOME / ENTRY VIEW (LOGIN & REGISTRATION) -->
+  <!-- ========================================== -->
+  <div id="home-view" class="app-view active">
+    <div class="portal-container">
+      <div class="portal-header">
+        <div class="logo-glow">
+          <i class="fa-solid fa-qrcode"></i> Smart Library
+        </div>
+        <p class="portal-subtitle">Next-Gen QR-Based Library Management System</p>
+      </div>
+
+      <div class="portal-card glass-panel">
+        <div class="portal-tabs">
+          <div id="tab-login" class="portal-tab active" onclick="switchPortalTab('login')">Login</div>
+          <div id="tab-register" class="portal-tab" onclick="switchPortalTab('register')">Register Library</div>
+        </div>
+
+        <!-- Portal: Login Form -->
+        <form id="form-login" onsubmit="handleLoginSubmit(event)">
+          <div class="form-toggle-label">
+            <div id="toggle-role-admin" class="form-toggle-btn active" onclick="setLoginRole('admin')">Librarian / Admin</div>
+            <div id="toggle-role-student" class="form-toggle-btn" onclick="setLoginRole('student')">Student / Member</div>
+          </div>
+
+          <div class="form-group">
+            <label for="login-library-select">Select Library</label>
+            <select id="login-library-select" class="form-control" required>
+              <option value="" disabled selected>Loading libraries...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="login-username" id="login-username-label">Username</label>
+            <input type="text" id="login-username" class="form-control" placeholder="Enter username" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" placeholder="Enter password" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Authenticate
+          </button>
+        </form>
+
+        <!-- Portal: Register Library Form -->
+        <form id="form-register" style="display: none;" onsubmit="handleRegisterLibrarySubmit(event)">
+          <div class="form-group">
+            <label for="register-lib-name">Library Name</label>
+            <input type="text" id="register-lib-name" class="form-control" placeholder="e.g., Central University Library" required>
+          </div>
+
+          <div class="form-group">
+            <label for="register-admin-user">Admin Username</label>
+            <input type="text" id="register-admin-user" class="form-control" placeholder="Create username" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="register-admin-password">Admin Password</label>
+            <input type="password" id="register-admin-password" class="form-control" placeholder="Create strong password" required autocomplete="new-password">
+          </div>
+
+          <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 10px;">
+            <i class="fa-solid fa-plus"></i> Initialize Library
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- 2. ADMIN / LIBRARIAN DASHBOARD VIEW -->
+  <!-- ========================================== -->
+  <div id="admin-view" class="app-view">
+    <div class="dashboard-shell">
+      <!-- Admin Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo">
+            <i class="fa-solid fa-laptop-code"></i> <span>SmartLib</span>
+          </div>
+        </div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-link active" onclick="switchDashboardTab('admin-sub-overview', this)">
+            <i class="fa-solid fa-chart-pie"></i> <span>Overview</span>
+          </li>
+          <li class="sidebar-link" onclick="switchDashboardTab('admin-sub-books', this)">
+            <i class="fa-solid fa-book"></i> <span>Manage Books</span>
+          </li>
+          <li class="sidebar-link" onclick="switchDashboardTab('admin-sub-members', this)">
+            <i class="fa-solid fa-user-group"></i> <span>Manage Members</span>
+          </li>
+          <li class="sidebar-link" onclick="switchDashboardTab('admin-sub-desk', this)">
+            <i class="fa-solid fa-clipboard-list"></i> <span>Issue/Return Desk</span>
+          </li>
+          <li class="sidebar-link" onclick="switchDashboardTab('admin-sub-settings', this)">
+            <i class="fa-solid fa-gears"></i> <span>Settings</span>
+          </li>
+        </ul>
+        <div class="sidebar-profile">
+          <div class="profile-avatar">A</div>
+          <div class="profile-info">
+            <div class="profile-name" id="admin-profile-name">Admin Librarian</div>
+            <div class="profile-role" id="admin-profile-lib">Library Name</div>
+          </div>
+          <i class="fa-solid fa-power-off btn-logout" title="Log Out" onclick="handleLogout()"></i>
+        </div>
+      </aside>
+
+      <!-- Admin Main Panel -->
+      <main class="dash-content-container">
+        <header class="dash-header">
+          <div class="dash-header-title">
+            <h2 id="admin-section-title">Librarian Overview</h2>
+          </div>
+          <div class="dash-header-actions">
+            <span class="active-library-tag" id="admin-active-lib-badge">Library ID</span>
+          </div>
+        </header>
+
+        <div class="dash-view-area">
+
+          <!-- Subview 1: Overview Stats -->
+          <div id="admin-sub-overview" class="dash-subview active">
+            <div class="stats-grid">
+              <div class="stat-card glass-panel">
+                <div class="stat-details">
+                  <h3 id="stat-total-books">0</h3>
+                  <p>Total Books</p>
+                </div>
+                <div class="stat-icon"><i class="fa-solid fa-book-open"></i></div>
+              </div>
+              <div class="stat-card glass-panel success">
+                <div class="stat-details">
+                  <h3 id="stat-total-members">0</h3>
+                  <p>Registered Students</p>
+                </div>
+                <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+              </div>
+              <div class="stat-card glass-panel warning">
+                <div class="stat-details">
+                  <h3 id="stat-issued-books">0</h3>
+                  <p>Books Issued</p>
+                </div>
+                <div class="stat-icon"><i class="fa-solid fa-hand-holding-hand"></i></div>
+              </div>
+              <div class="stat-card glass-panel danger">
+                <div class="stat-details">
+                  <h3 id="stat-active-fines">$0.00</h3>
+                  <p>Total Fines</p>
+                </div>
+                <div class="stat-icon"><i class="fa-solid fa-circle-dollar-to-slot"></i></div>
+              </div>
+            </div>
+
+            <!-- Recent activity section -->
+            <div class="section-card glass-panel">
+              <div class="section-header">
+                <div class="section-title">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                  <h3>Recent Library Activities</h3>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Activity Date</th>
+                      <th>Book / Title</th>
+                      <th>Student Name</th>
+                      <th>Type</th>
+                      <th>Due Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-recent-activities-body">
+                    <tr>
+                      <td colspan="6" style="text-align: center; color: var(--text-muted);">No activity recorded yet.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subview 2: Manage Books -->
+          <div id="admin-sub-books" class="dash-subview">
+            <div class="section-card glass-panel">
+              <div class="section-header">
+                <div class="search-box">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" id="book-search-input" class="form-control" placeholder="Search title, author, genre..." oninput="filterBooksTable()">
+                </div>
+                <button class="btn btn-primary" onclick="openAddBookModal()">
+                  <i class="fa-solid fa-plus"></i> Add New Book
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Book ID / QR</th>
+                      <th>Title</th>
+                      <th>Author</th>
+                      <th>Genre</th>
+                      <th>ISBN</th>
+                      <th>Availability</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-books-body">
+                    <!-- Books loaded via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subview 3: Manage Members -->
+          <div id="admin-sub-members" class="dash-subview">
+            <div class="section-card glass-panel">
+              <div class="section-header">
+                <div class="search-box">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" id="member-search-input" class="form-control" placeholder="Search by student ID or name..." oninput="filterMembersTable()">
+                </div>
+                <button class="btn btn-success" onclick="openAddMemberModal()">
+                  <i class="fa-solid fa-user-plus"></i> Register Student
+                </button>
+              </div>
+
+              <div class="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Member ID / QR</th>
+                      <th>Name</th>
+                      <th>Username</th>
+                      <th>Email</th>
+                      <th>Issued Count</th>
+                      <th>Fines Due</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-members-body">
+                    <!-- Members loaded via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subview 4: Issue / Return Desk -->
+          <div id="admin-sub-desk" class="dash-subview">
+            <div class="checkout-panel-grid">
+              
+              <!-- Form Panel -->
+              <div class="section-card glass-panel" style="margin-bottom: 0;">
+                <div class="section-header">
+                  <div class="section-title">
+                    <i class="fa-solid fa-shuffle"></i>
+                    <h3>Checkout / Return Operations</h3>
+                  </div>
+                </div>
+
+                <form id="form-desk-operation" onsubmit="handleDeskOperationSubmit(event)">
+                  <div class="form-group" style="position: relative;">
+                    <label for="desk-member-input">1. Student / Member ID</label>
+                    <div style="display: flex; gap: 10px;">
+                      <input type="text" id="desk-member-input" class="form-control" placeholder="Enter Member ID or scan QR code" required onkeyup="showDeskMemberSuggestions(this.value)">
+                      <button type="button" class="btn btn-secondary" onclick="openScannerFor('member')">
+                        <i class="fa-solid fa-camera"></i> Scan Member QR
+                      </button>
+                    </div>
+                    <div id="desk-member-suggestions" class="suggestions-dropdown"></div>
+                  </div>
+
+                  <div class="form-group" style="position: relative;">
+                    <label for="desk-book-input">2. Book ID</label>
+                    <div style="display: flex; gap: 10px;">
+                      <input type="text" id="desk-book-input" class="form-control" placeholder="Enter Book ID or scan QR code" required onkeyup="showDeskBookSuggestions(this.value)">
+                      <button type="button" class="btn btn-secondary" onclick="openScannerFor('book')">
+                        <i class="fa-solid fa-camera"></i> Scan Book QR
+                      </button>
+                    </div>
+                    <div id="desk-book-suggestions" class="suggestions-dropdown"></div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="desk-days-input">Loan Period (Days)</label>
+                    <select id="desk-days-input" class="form-control">
+                      <option value="7">7 Days (Short Loan)</option>
+                      <option value="14" selected>14 Days (Standard Loan)</option>
+                      <option value="30">30 Days (Extended Loan)</option>
+                    </select>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px; height: 45px;">
+                    <i class="fa-solid fa-circle-check"></i> Process Checkout Issue
+                  </button>
+                </form>
+
+                <!-- Simulated Scanning for systems without webcams -->
+                <div class="mock-scanner-helper" style="margin-top: 25px;">
+                  <p><i class="fa-solid fa-lightbulb"></i> <strong>Offline Simulator:</strong> Click a quick-code tag to instantly fill details and simulate scanning a physical QR code.</p>
+                  <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <div>
+                      <span style="font-size:12px; color: var(--text-secondary);">Simulate Book QR:</span>
+                      <div id="mock-books-list" class="mock-qr-list"></div>
+                    </div>
+                    <div>
+                      <span style="font-size:12px; color: var(--text-secondary);">Simulate Student QR:</span>
+                      <div id="mock-members-list" class="mock-qr-list"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Active Checkouts Summary Panel -->
+              <div class="section-card glass-panel" style="margin-bottom: 0;">
+                <div class="section-header">
+                  <div class="section-title">
+                    <i class="fa-solid fa-receipt"></i>
+                    <h3>Active Checkouts Desk</h3>
+                  </div>
+                </div>
+
+                <div id="desk-checkout-list" style="display: flex; flex-direction: column; gap: 16px; max-height: 480px; overflow-y: auto;">
+                  <!-- Loaded via JS -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Subview 5: Settings & Config Status -->
+          <div id="admin-sub-settings" class="dash-subview">
+            <div class="section-card glass-panel">
+              <div class="section-header">
+                <div class="section-title">
+                  <i class="fa-solid fa-circle-info"></i>
+                  <h3>System Status & Configurations</h3>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="glass-panel" style="padding: 20px; border-left: 4px solid var(--color-primary); background: rgba(124, 58, 237, 0.04);">
+                  <h4 style="margin-bottom: 8px; font-size: 16px;">Active Database Mode</h4>
+                  <div id="database-mode-indicator" style="display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight:600;">
+                    <!-- Filled by JavaScript -->
+                  </div>
+                  <p id="database-mode-desc" style="font-size: 13px; color: var(--text-secondary); margin-top: 8px; line-height: 1.4;">
+                    Checking database configuration status...
+                  </p>
+                </div>
+
+                <div class="glass-panel" style="padding: 20px; border-left: 4px solid var(--color-warning); background: rgba(245, 158, 11, 0.04);">
+                  <h4 style="margin-bottom: 8px; font-size: 16px;">Configured Fine Policies</h4>
+                  <div style="display: flex; gap: 30px; margin-top: 15px; flex-wrap: wrap;">
+                    <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
+                      <label for="settings-fine-rate">Daily Fine Rate ($)</label>
+                      <input type="number" id="settings-fine-rate" class="form-control" value="1.00" step="0.25" onchange="updateFineRate(this.value)">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
+                      <label for="settings-max-books">Max Books Checked Out</label>
+                      <input type="number" id="settings-max-books" class="form-control" value="5" min="1" onchange="updateMaxBooksLimit(this.value)">
+                    </div>
+                  </div>
+                </div>
+
+                <div style="margin-top: 10px; text-align: center; color: var(--text-muted); font-size: 12px;">
+                  Smart Library Platform v1.0.0 &copy; 2026. Made with Google Gemini Pair Programming.
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- 3. STUDENT / MEMBER DASHBOARD VIEW -->
+  <!-- ========================================== -->
+  <div id="student-view" class="app-view">
+    <div class="dashboard-shell">
+      <!-- Student Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo">
+            <i class="fa-solid fa-graduation-cap"></i> <span>StudentPortal</span>
+          </div>
+        </div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-link active" onclick="switchStudentTab('student-sub-profile', this)">
+            <i class="fa-solid fa-id-card"></i> <span>My Profile</span>
+          </li>
+          <li class="sidebar-link" onclick="switchStudentTab('student-sub-browse', this)">
+            <i class="fa-solid fa-magnifying-glass"></i> <span>Browse Books</span>
+          </li>
+          <li class="sidebar-link" onclick="switchStudentTab('student-sub-issues', this)">
+            <i class="fa-solid fa-book-reader"></i> <span>My Checkouts</span>
+          </li>
+        </ul>
+        <div class="sidebar-profile">
+          <div class="profile-avatar" style="background: linear-gradient(135deg, var(--color-secondary), var(--color-info))">S</div>
+          <div class="profile-info">
+            <div class="profile-name" id="student-profile-name">Student Member</div>
+            <div class="profile-role" id="student-profile-lib">Library Name</div>
+          </div>
+          <i class="fa-solid fa-power-off btn-logout" title="Log Out" onclick="handleLogout()"></i>
+        </div>
+      </aside>
+
+      <!-- Student Main Panel -->
+      <main class="dash-content-container">
+        <header class="dash-header">
+          <div class="dash-header-title">
+            <h2 id="student-section-title">Student Dashboard</h2>
+          </div>
+          <div class="dash-header-actions">
+            <span class="active-library-tag" id="student-active-lib-badge">Library Name</span>
+          </div>
+        </header>
+
+        <div class="dash-view-area">
+
+          <!-- Student Subview 1: Profile & QR -->
+          <div id="student-sub-profile" class="dash-subview active">
+            <div class="student-profile-hero glass-panel">
+              <div class="profile-avatar-large">
+                <i class="fa-solid fa-user-tie"></i>
+              </div>
+              <div class="student-meta-details">
+                <h3 id="student-display-name">Student Name</h3>
+                <p id="student-display-username"><i class="fa-solid fa-user" style="margin-right: 6px;"></i> username</p>
+                <p id="student-display-email" style="margin-top: 4px;"><i class="fa-solid fa-envelope" style="margin-right: 6px;"></i> student@email.com</p>
+                <p id="student-display-id" style="margin-top: 4px; font-size:12px; font-family:monospace;"><i class="fa-solid fa-fingerprint" style="margin-right: 6px;"></i> Member ID: mem_xxxx</p>
+              </div>
+
+              <!-- Student QR -->
+              <div class="student-qr-container">
+                <div id="student-profile-qr-holder"></div>
+                <div class="student-qr-label">Member Scan ID</div>
+              </div>
+            </div>
+
+            <!-- Dashboard summary cards for Student -->
+            <div class="stats-grid">
+              <div class="stat-card glass-panel">
+                <div class="stat-details">
+                  <h3 id="student-stat-books-count">0</h3>
+                  <p>Books Checked Out</p>
+                </div>
+                <div class="stat-icon"><i class="fa-solid fa-book-open"></i></div>
+              </div>
+              <div class="stat-card glass-panel success">
+                <div class="stat-details">
+                  <h3 id="student-stat-due-date">None</h3>
+                  <p>Next Due Date</p>
+                </div>
+                <div class="stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
+              </div>
+              <div class="stat-card glass-panel danger">
+                <div class="stat-details">
+                  <h3 id="student-stat-fines">$0.00</h3>
+                  <p>Unpaid Fines</p>
+                </div>
+                <div class="stat-icon"><i class="fa-solid fa-circle-dollar-to-slot"></i></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Student Subview 2: Browse Catalog -->
+          <div id="student-sub-browse" class="dash-subview">
+            <div class="section-card glass-panel">
+              <div class="section-header">
+                <div class="search-box" style="max-width: 100%">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" id="student-book-search" class="form-control" placeholder="Search titles, authors, or genres in the catalog..." oninput="filterStudentBooks()">
+                </div>
+              </div>
+
+              <!-- Books Card Catalog -->
+              <div id="student-books-catalog" class="books-grid">
+                <!-- Book Cards rendered dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Student Subview 3: My Issued Books -->
+          <div id="student-sub-issues" class="dash-subview">
+            <div class="section-card glass-panel">
+              <div class="section-header">
+                <div class="section-title">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                  <h3>My Borrowing Records</h3>
+                </div>
+              </div>
+              
+              <div class="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Book Title</th>
+                      <th>Borrow Date</th>
+                      <th>Due Date</th>
+                      <th>Return Date</th>
+                      <th>Current Fine</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="student-table-issues-body">
+                    <!-- Loaded via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- 4. MODALS & POP-UPS (SYSTEM ACTIONS) -->
+  <!-- ========================================== -->
+
+  <!-- Modal 1: Add / Edit Book Form -->
+  <div id="modal-book" class="modal-overlay" onclick="closeModal('modal-book')">
+    <div class="modal-content glass-panel" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-book')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h3 id="modal-book-title">Add New Book Record</h3>
+      </div>
+      <form id="form-book-submit" onsubmit="handleBookFormSubmit(event)">
+        <input type="hidden" id="modal-book-id">
+        <div class="form-group">
+          <label for="book-title">Book Title</label>
+          <input type="text" id="book-title" class="form-control" placeholder="e.g., The Great Gatsby" required>
+        </div>
+        <div class="form-group">
+          <label for="book-author">Author Name</label>
+          <input type="text" id="book-author" class="form-control" placeholder="e.g., F. Scott Fitzgerald" required>
+        </div>
+        <div class="form-group">
+          <label for="book-genre">Genre / Category</label>
+          <input type="text" id="book-genre" class="form-control" placeholder="e.g., Fiction, Science Fiction, History" required>
+        </div>
+        <div class="form-group">
+          <label for="book-isbn">ISBN Code</label>
+          <input type="text" id="book-isbn" class="form-control" placeholder="e.g., 978-3-16-148410-0" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-book')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-book">Save Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Add / Edit Member Form -->
+  <div id="modal-member" class="modal-overlay" onclick="closeModal('modal-member')">
+    <div class="modal-content glass-panel" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-member')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h3 id="modal-member-title">Add Student Record</h3>
+      </div>
+      <form id="form-member-submit" onsubmit="handleMemberFormSubmit(event)">
+        <input type="hidden" id="modal-member-id">
+        <div class="form-group">
+          <label for="member-name">Student Full Name</label>
+          <input type="text" id="member-name" class="form-control" placeholder="e.g., Jane Doe" required>
+        </div>
+        <div class="form-group">
+          <label for="member-username">Student Login Username</label>
+          <input type="text" id="member-username" class="form-control" placeholder="e.g., janedoe9" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="member-email">Email Address</label>
+          <input type="email" id="member-email" class="form-control" placeholder="e.g., jane@university.edu" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="member-password">Account Password</label>
+          <input type="password" id="member-password" class="form-control" placeholder="Create student password" required autocomplete="new-password">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-member')">Cancel</button>
+          <button type="submit" class="btn btn-success" id="btn-save-member">Add Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: View QR Code Card -->
+  <div id="modal-qr" class="modal-overlay" onclick="closeModal('modal-qr')">
+    <div class="modal-content glass-panel" style="max-width: 400px;" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal('modal-qr')"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header" style="text-align: center;">
+        <h3 id="modal-qr-header-title">Smart Code Generated</h3>
+      </div>
+      <div class="qr-modal-body">
+        <div class="qr-canvas-container">
+          <div id="modal-qr-canvas"></div>
+        </div>
+        <p class="qr-info-text" id="modal-qr-description">Scan this code with the scanner to issue/verify.</p>
+        <button class="btn btn-primary" onclick="downloadModalQRCode()" style="width: 100%;">
+          <i class="fa-solid fa-download"></i> Download QR Image
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Camera Scanner View -->
+  <div id="modal-scanner" class="modal-overlay" onclick="closeScannerModal()">
+    <div class="modal-content glass-panel" style="max-width: 450px;" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeScannerModal()"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal-header">
+        <h3>Camera Scanner Active</h3>
+        <p style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Align the library QR code inside the frame</p>
+      </div>
+      <div class="scanner-camera-panel">
+        <div class="scanner-viewport-container">
+          <div id="scanner-view-camera-source"></div>
+          <div class="scanner-overlay-laser"></div>
+        </div>
+        <div class="scanner-controls">
+          <div class="file-scanner-box">
+            <i class="fa-solid fa-file-image"></i>
+            <p>Or upload an image file to decode</p>
+            <input type="file" id="scanner-file-input" accept="image/*" onchange="handleImageQRUpload(event)">
+          </div>
+          <div style="font-size: 11px; text-align: center; color: var(--text-muted);">
+            Ensure your webcam permissions are enabled.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden container for Temp File Scanning -->
+  <div id="qr-file-scanner-temp" style="position: absolute; left: -9999px; top: -9999px; width: 200px; height: 200px;"></div>
+
+  <!-- Toast Toast Container -->
+  <div class="toast-container" id="toast-root"></div>
+
+  <!-- Core Script Integrations -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/firebase-db.js"></script>
+  <script src="js/qr-handler.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
