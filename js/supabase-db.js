@@ -423,13 +423,24 @@ class SupabaseLibraryDB {
         libCode = (lib.code ? lib.code : lib.name.slice(0, 3)).toUpperCase().trim();
       }
 
-      // 2. Fetch current member count for this library
-      const { count, error: countErr } = await this.client
+      // 2. Fetch all current member IDs for this library to find the max sequence
+      const { data: currentMembers, error: listErr } = await this.client
         .from('members')
-        .select('*', { count: 'exact', head: true })
+        .select('id')
         .eq('library_id', libraryId);
       
-      const seq = (count || 0) + 1;
+      let maxSeq = 0;
+      if (!listErr && currentMembers && currentMembers.length > 0) {
+        currentMembers.forEach(m => {
+          const last4 = m.id.slice(-4);
+          const num = parseInt(last4, 10);
+          if (!isNaN(num) && num > maxSeq) {
+            maxSeq = num;
+          }
+        });
+      }
+      
+      const seq = maxSeq + 1;
       const seqStr = seq.toString().padStart(4, '0');
       const year = new Date().getFullYear();
       
@@ -488,8 +499,16 @@ class SupabaseLibraryDB {
         libCode = (lib.code ? lib.code : lib.name.slice(0, 3)).toUpperCase().trim();
       }
 
-      const count = members.filter(m => m.libraryId === libraryId).length;
-      const seq = count + 1;
+      const libMembers = members.filter(m => m.libraryId === libraryId);
+      let maxSeq = 0;
+      libMembers.forEach(m => {
+        const last4 = m.id.slice(-4);
+        const num = parseInt(last4, 10);
+        if (!isNaN(num) && num > maxSeq) {
+          maxSeq = num;
+        }
+      });
+      const seq = maxSeq + 1;
       const seqStr = seq.toString().padStart(4, '0');
       const year = new Date().getFullYear();
       id = `Lib${year}${libCode}${seqStr}`;
