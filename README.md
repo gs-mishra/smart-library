@@ -1,6 +1,6 @@
 # 📚 Smart Library Portal (QR-Based)
 
-A premium, state-of-the-art Single Page Web Application (SPA) designed to manage smart libraries using dynamic **QR Codes** for book cataloging and member verification. The platform connects directly to **Google Firebase Firestore** for real-time cloud data sync, and features an offline **LocalStorage fallback** for immediate local sandbox testing.
+A premium, state-of-the-art Single Page Web Application (SPA) designed to manage smart libraries using dynamic **QR Codes** for book cataloging and member verification. The platform connects directly to a **Supabase PostgreSQL** cloud database for real-time relational data sync, and features an offline **LocalStorage fallback** for immediate local sandbox testing.
 
 ---
 
@@ -35,12 +35,13 @@ A premium, state-of-the-art Single Page Web Application (SPA) designed to manage
 e:\Smart Library\
 ├── index.html              # Main SPA container and layouts
 ├── README.md               # Repository documentation
-├── FIREBASE_SETUP.md       # Step-by-step Firebase Firestore setup guide
+├── SUPABASE_SETUP.md       # Step-by-step Supabase PostgreSQL setup guide
+├── SUPABASE_SCHEMA.sql     # SQL DDL table creation queries for Supabase SQL Editor
 ├── css/
 │   └── styles.css          # Design system styling tokens & visual rules
 └── js/
-    ├── firebase-config.js  # App credentials template & active Firestore keys
-    ├── firebase-db.js      # Universal Database Adapter (Firestore vs LocalStorage)
+    ├── supabase-config.js  # App credentials & active Supabase client keys
+    ├── supabase-db.js      # Universal Database Adapter (Supabase PostgREST vs LocalStorage)
     ├── qr-handler.js       # QR Code generation and webcam reader bindings
     └── app.js              # Application state router and form action events
 ```
@@ -52,17 +53,14 @@ e:\Smart Library\
 ### 1. Run the Portal
 Double-click `index.html` or serve the project directory using a local web server (e.g. `npx http-server` or Live Server extension). The app runs purely on the client side—no local database setup or compilation is required!
 
-### 2. Configure Firebase Database (Already Configured!)
-Your project is pre-configured with active Firebase credentials inside `js/firebase-config.js`. 
-To migrate or set up your own database rules:
-1. Initialize a **Firestore Database** in the [Firebase Console](https://console.firebase.google.com/).
-2. Enable Firestore read/write rules:
-   ```javascript
-   allow read, write: if true;
-   ```
-3. Set your custom project keys inside `js/firebase-config.js`.
+### 2. Configure Supabase Database (Already Configured!)
+Your project is pre-configured with active Supabase credentials inside `js/supabase-config.js`. 
+To migrate or set up your own database tables:
+1. Log in to the [Supabase Dashboard](https://supabase.com/dashboard).
+2. Go to the **SQL Editor**, open **[SUPABASE_SCHEMA.sql](file:///e:/Smart%20Library/SUPABASE_SCHEMA.sql)**, copy the script, paste it into the editor, and click **Run**.
+3. Set your custom project keys inside `js/supabase-config.js` if you are using your own Supabase project.
 
-*For detailed instructions, see [FIREBASE_SETUP.md](file:///e:/Smart%20Library/FIREBASE_SETUP.md).*
+*For detailed instructions, see [SUPABASE_SETUP.md](file:///e:/Smart%20Library/SUPABASE_SETUP.md).*
 
 ---
 
@@ -71,4 +69,4 @@ All libraries are loaded via reliable CDNs so you don't need `npm install`:
 - **QR Code Generation**: [QRCode.js](https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js)
 - **Webcam QR Decoding**: [html5-qrcode](https://unpkg.com/html5-qrcode)
 - **Dashboard Icons**: [FontAwesome 6.4](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)
-- **Database Engine**: [Google Firebase Compat SDK v9](https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js)
+- **Database Engine**: [Supabase JS Client SDK v2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)

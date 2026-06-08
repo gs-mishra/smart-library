@@ -856,10 +856,10 @@ function updateSystemSettingsIndicator() {
   const dbDesc = document.getElementById("database-mode-desc");
   if (!dbInd) return;
 
-  const isFirebase = window.smartLibDB.isFirebase;
-  if (isFirebase) {
-    dbInd.innerHTML = `<span class="badge badge-success"><i class="fa-solid fa-cloud"></i> Firebase Active</span>`;
-    dbDesc.textContent = "Your portal is connected directly to Google Firebase Cloud Firestore. Authentication details and records are saved dynamically online.";
+  const isSupabase = window.smartLibDB.isSupabase;
+  if (isSupabase) {
+    dbInd.innerHTML = `<span class="badge badge-success"><i class="fa-solid fa-cloud"></i> Supabase Active</span>`;
+    dbDesc.textContent = "Your portal is connected directly to Supabase Cloud PostgreSQL. Authentication details and records are saved dynamically online.";
   } else {
     dbInd.innerHTML = `<span class="badge badge-info"><i class="fa-solid fa-hard-drive"></i> LocalStorage Offline</span>`;
     dbDesc.textContent = "Running offline. All student credentials, book cataloging, and borrow records are saved securely inside your browser's LocalStorage database.";
