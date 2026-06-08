@@ -7,12 +7,13 @@ CREATE TABLE IF NOT EXISTS libraries (
     name TEXT NOT NULL,
     admin_user TEXT NOT NULL UNIQUE,
     admin_password TEXT NOT NULL,
+    code TEXT, -- New Library Short Code field
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 2. Create Members (Students) Table
 CREATE TABLE IF NOT EXISTS members (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY, -- Will hold generated card format: Lib[Year][Code][Seq]
     library_id TEXT REFERENCES libraries(id) ON DELETE CASCADE,
     username TEXT NOT NULL,
     name TEXT NOT NULL,
@@ -32,6 +33,8 @@ CREATE TABLE IF NOT EXISTS books (
     author TEXT NOT NULL,
     genre TEXT NOT NULL,
     isbn TEXT NOT NULL,
+    copy_count INTEGER NOT NULL DEFAULT 1, -- New field: copies count
+    shelf_location TEXT,                   -- New field: shelf location
     availability TEXT NOT NULL DEFAULT 'available' CHECK (availability IN ('available', 'issued')),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -61,9 +64,9 @@ ALTER TABLE members DISABLE ROW LEVEL SECURITY;
 ALTER TABLE books DISABLE ROW LEVEL SECURITY;
 ALTER TABLE issues DISABLE ROW LEVEL SECURITY;
 
--- 6. Database Update script (If Database is Already Initialized)
--- If you already set up the tables and want to upgrade them in-place,
--- execute these lines in your SQL Editor:
+-- 6. Database Schema Alter Scripts (If Database is Already Initialized)
+-- Run these scripts in the SQL Editor to update your live tables:
 -- 
--- ALTER TABLE members ADD COLUMN phone TEXT NOT NULL DEFAULT '0000000000';
--- ALTER TABLE members ADD COLUMN address TEXT;
+-- ALTER TABLE libraries ADD COLUMN code TEXT;
+-- ALTER TABLE books ADD COLUMN copy_count INTEGER NOT NULL DEFAULT 1;
+-- ALTER TABLE books ADD COLUMN shelf_location TEXT;

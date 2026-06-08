@@ -143,6 +143,7 @@ async function loadLibrariesDropdown() {
 async function handleRegisterLibrarySubmit(e) {
   e.preventDefault();
   const name = document.getElementById("register-lib-name").value;
+  const code = document.getElementById("register-lib-code").value;
   const user = document.getElementById("register-admin-user").value;
   const pass = document.getElementById("register-admin-password").value;
 
@@ -152,7 +153,7 @@ async function handleRegisterLibrarySubmit(e) {
   }
 
   try {
-    const newLib = await window.smartLibDB.registerLibrary(name, user, pass);
+    const newLib = await window.smartLibDB.registerLibrary(name, user, pass, code);
     showToast(`Successfully registered library: ${newLib.name}!`, "success");
     e.target.reset();
     switchPortalTab('login');
@@ -319,7 +320,7 @@ function renderBooksTable(books) {
   tbody.innerHTML = "";
 
   if (books.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No books cataloged in this library.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No books cataloged in this library.</td></tr>`;
     return;
   }
 
@@ -339,8 +340,12 @@ function renderBooksTable(books) {
       </td>
       <td><strong>${b.title}</strong></td>
       <td>${b.author}</td>
-      <td>${b.genre}</td>
-      <td>${b.isbn}</td>
+      <td>
+        <div>${b.genre}</div>
+        <div style="font-size:11px; color: var(--text-secondary); margin-top:2px;"><i class="fa-solid fa-location-dot" style="font-size:9px; margin-right:4px;"></i>${b.shelfLocation || 'N/A'}</div>
+      </td>
+      <td><code>${b.isbn}</code></td>
+      <td><strong>${b.copyCount || 1}</strong></td>
       <td><span class="badge ${isAvail ? 'badge-success' : 'badge-danger'}">${b.availability}</span></td>
       <td>
         <div style="display:flex; gap: 8px;">
@@ -374,6 +379,8 @@ function openAddBookModal() {
   document.getElementById("modal-book-title").textContent = "Add New Book Record";
   document.getElementById("form-book-submit").reset();
   document.getElementById("modal-book-id").value = "";
+  document.getElementById("book-copy-count").value = 1;
+  document.getElementById("book-shelf-location").value = "";
   openModal("modal-book");
 }
 
@@ -387,6 +394,8 @@ function openEditBookModal(bookId) {
   document.getElementById("book-author").value = book.author;
   document.getElementById("book-genre").value = book.genre;
   document.getElementById("book-isbn").value = book.isbn;
+  document.getElementById("book-copy-count").value = book.copyCount || 1;
+  document.getElementById("book-shelf-location").value = book.shelfLocation || "";
 
   openModal("modal-book");
 }
@@ -398,8 +407,10 @@ async function handleBookFormSubmit(e) {
   const author = document.getElementById("book-author").value;
   const genre = document.getElementById("book-genre").value;
   const isbn = document.getElementById("book-isbn").value;
+  const copyCount = document.getElementById("book-copy-count").value;
+  const shelfLocation = document.getElementById("book-shelf-location").value;
 
-  const data = { title, author, genre, isbn };
+  const data = { title, author, genre, isbn, copyCount, shelfLocation };
 
   try {
     const libId = currentSession.libraryId;
@@ -992,8 +1003,12 @@ function renderStudentBooksGrid(books) {
     card.innerHTML = `
       <div class="book-title">${b.title}</div>
       <div class="book-author">by ${b.author}</div>
-      <div style="font-size:12px; color:var(--text-secondary); margin-bottom: 12px;">
+      <div style="font-size:12px; color:var(--text-secondary); margin-bottom: 6px;">
         <i class="fa-solid fa-tags" style="margin-right:6px;"></i>${b.genre}
+      </div>
+      <div style="font-size:12px; color:var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between;">
+        <span><i class="fa-solid fa-location-dot" style="margin-right:6px;"></i>${b.shelfLocation || 'N/A'}</span>
+        <span>Copies: <strong>${b.copyCount || 1}</strong></span>
       </div>
       <div class="book-meta">
         <span>ISBN: ${b.isbn}</span>

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="QR-code based smart library management system with Firebase Firestore and LocalStorage capability.">
+  <meta name="description"
+    content="QR-code based smart library management system with Firebase Firestore and LocalStorage capability.">
   <title>Smart Library - QR-Based Portal</title>
-  
+
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Core Design CSS -->
@@ -13,11 +15,12 @@
 
   <!-- Supabase JS Client library SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+
   <!-- QRCode.js and html5-qrcode CDNs -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
+
 <body>
 
   <!-- ========================================== -->
@@ -41,8 +44,10 @@
         <!-- Portal: Login Form -->
         <form id="form-login" onsubmit="handleLoginSubmit(event)">
           <div class="form-toggle-label">
-            <div id="toggle-role-admin" class="form-toggle-btn active" onclick="setLoginRole('admin')">Librarian / Admin</div>
-            <div id="toggle-role-student" class="form-toggle-btn" onclick="setLoginRole('student')">Student / Member</div>
+            <div id="toggle-role-admin" class="form-toggle-btn active" onclick="setLoginRole('admin')">Librarian / Admin
+            </div>
+            <div id="toggle-role-student" class="form-toggle-btn" onclick="setLoginRole('student')">Student / Member
+            </div>
           </div>
 
           <div class="form-group">
@@ -54,12 +59,14 @@
 
           <div class="form-group">
             <label for="login-username" id="login-username-label">Username</label>
-            <input type="text" id="login-username" class="form-control" placeholder="Enter username" required autocomplete="username">
+            <input type="text" id="login-username" class="form-control" placeholder="Enter username" required
+              autocomplete="username">
           </div>
 
           <div class="form-group">
             <label for="login-password">Password</label>
-            <input type="password" id="login-password" class="form-control" placeholder="Enter password" required autocomplete="current-password">
+            <input type="password" id="login-password" class="form-control" placeholder="Enter password" required
+              autocomplete="current-password">
           </div>
 
           <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
@@ -71,17 +78,25 @@
         <form id="form-register" style="display: none;" onsubmit="handleRegisterLibrarySubmit(event)">
           <div class="form-group">
             <label for="register-lib-name">Library Name</label>
-            <input type="text" id="register-lib-name" class="form-control" placeholder="e.g., Central University Library" required>
+            <input type="text" id="register-lib-name" class="form-control"
+              placeholder="e.g., Central University Library" required>
+          </div>
+          <div class="form-group">
+            <label for="register-lib-code">Library Short Code (Max 5 chars)</label>
+            <input type="text" id="register-lib-code" class="form-control"
+              placeholder="e.g., CEN" maxlength="5" required style="text-transform: uppercase;">
           </div>
 
           <div class="form-group">
             <label for="register-admin-user">Admin Username</label>
-            <input type="text" id="register-admin-user" class="form-control" placeholder="Create username" required autocomplete="username">
+            <input type="text" id="register-admin-user" class="form-control" placeholder="Create username" required
+              autocomplete="username">
           </div>
 
           <div class="form-group">
             <label for="register-admin-password">Admin Password</label>
-            <input type="password" id="register-admin-password" class="form-control" placeholder="Create strong password" required autocomplete="new-password">
+            <input type="password" id="register-admin-password" class="form-control"
+              placeholder="Create strong password" required autocomplete="new-password">
           </div>
 
           <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 10px;">
@@ -200,7 +215,8 @@
                   </thead>
                   <tbody id="table-recent-activities-body">
                     <tr>
-                      <td colspan="6" style="text-align: center; color: var(--text-muted);">No activity recorded yet.</td>
+                      <td colspan="6" style="text-align: center; color: var(--text-muted);">No activity recorded yet.
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -214,7 +230,8 @@
               <div class="section-header">
                 <div class="search-box">
                   <i class="fa-solid fa-magnifying-glass"></i>
-                  <input type="text" id="book-search-input" class="form-control" placeholder="Search title, author, genre..." oninput="filterBooksTable()">
+                  <input type="text" id="book-search-input" class="form-control"
+                    placeholder="Search title, author, genre..." oninput="filterBooksTable()">
                 </div>
                 <button class="btn btn-primary" onclick="openAddBookModal()">
                   <i class="fa-solid fa-plus"></i> Add New Book
@@ -228,8 +245,9 @@
                       <th>Book ID / QR</th>
                       <th>Title</th>
                       <th>Author</th>
-                      <th>Genre</th>
+                      <th>Genre & Location</th>
                       <th>ISBN</th>
+                      <th>Copies</th>
                       <th>Availability</th>
                       <th>Actions</th>
                     </tr>
@@ -248,7 +266,8 @@
               <div class="section-header">
                 <div class="search-box">
                   <i class="fa-solid fa-magnifying-glass"></i>
-                  <input type="text" id="member-search-input" class="form-control" placeholder="Search by student ID or name..." oninput="filterMembersTable()">
+                  <input type="text" id="member-search-input" class="form-control"
+                    placeholder="Search by student ID or name..." oninput="filterMembersTable()">
                 </div>
                 <button class="btn btn-success" onclick="openAddMemberModal()">
                   <i class="fa-solid fa-user-plus"></i> Register Student
@@ -280,7 +299,7 @@
           <!-- Subview 4: Issue / Return Desk -->
           <div id="admin-sub-desk" class="dash-subview">
             <div class="checkout-panel-grid">
-              
+
               <!-- Form Panel -->
               <div class="section-card glass-panel" style="margin-bottom: 0;">
                 <div class="section-header">
@@ -294,7 +313,9 @@
                   <div class="form-group" style="position: relative;">
                     <label for="desk-member-input">1. Student / Member ID</label>
                     <div style="display: flex; gap: 10px;">
-                      <input type="text" id="desk-member-input" class="form-control" placeholder="Enter Member ID or scan QR code" required onkeyup="showDeskMemberSuggestions(this.value)">
+                      <input type="text" id="desk-member-input" class="form-control"
+                        placeholder="Enter Member ID or scan QR code" required
+                        onkeyup="showDeskMemberSuggestions(this.value)">
                       <button type="button" class="btn btn-secondary" onclick="openScannerFor('member')">
                         <i class="fa-solid fa-camera"></i> Scan Member QR
                       </button>
@@ -305,7 +326,9 @@
                   <div class="form-group" style="position: relative;">
                     <label for="desk-book-input">2. Book ID</label>
                     <div style="display: flex; gap: 10px;">
-                      <input type="text" id="desk-book-input" class="form-control" placeholder="Enter Book ID or scan QR code" required onkeyup="showDeskBookSuggestions(this.value)">
+                      <input type="text" id="desk-book-input" class="form-control"
+                        placeholder="Enter Book ID or scan QR code" required
+                        onkeyup="showDeskBookSuggestions(this.value)">
                       <button type="button" class="btn btn-secondary" onclick="openScannerFor('book')">
                         <i class="fa-solid fa-camera"></i> Scan Book QR
                       </button>
@@ -329,7 +352,8 @@
 
                 <!-- Simulated Scanning for systems without webcams -->
                 <div class="mock-scanner-helper" style="margin-top: 25px;">
-                  <p><i class="fa-solid fa-lightbulb"></i> <strong>Offline Simulator:</strong> Click a quick-code tag to instantly fill details and simulate scanning a physical QR code.</p>
+                  <p><i class="fa-solid fa-lightbulb"></i> <strong>Offline Simulator:</strong> Click a quick-code tag to
+                    instantly fill details and simulate scanning a physical QR code.</p>
                   <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
                     <div>
                       <span style="font-size:12px; color: var(--text-secondary);">Simulate Book QR:</span>
@@ -352,7 +376,8 @@
                   </div>
                 </div>
 
-                <div id="desk-checkout-list" style="display: flex; flex-direction: column; gap: 16px; max-height: 480px; overflow-y: auto;">
+                <div id="desk-checkout-list"
+                  style="display: flex; flex-direction: column; gap: 16px; max-height: 480px; overflow-y: auto;">
                   <!-- Loaded via JS -->
                 </div>
               </div>
@@ -371,32 +396,38 @@
               </div>
 
               <div style="display: flex; flex-direction: column; gap: 20px;">
-                <div class="glass-panel" style="padding: 20px; border-left: 4px solid var(--color-primary); background: rgba(124, 58, 237, 0.04);">
+                <div class="glass-panel"
+                  style="padding: 20px; border-left: 4px solid var(--color-primary); background: rgba(124, 58, 237, 0.04);">
                   <h4 style="margin-bottom: 8px; font-size: 16px;">Active Database Mode</h4>
-                  <div id="database-mode-indicator" style="display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight:600;">
+                  <div id="database-mode-indicator"
+                    style="display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight:600;">
                     <!-- Filled by JavaScript -->
                   </div>
-                  <p id="database-mode-desc" style="font-size: 13px; color: var(--text-secondary); margin-top: 8px; line-height: 1.4;">
+                  <p id="database-mode-desc"
+                    style="font-size: 13px; color: var(--text-secondary); margin-top: 8px; line-height: 1.4;">
                     Checking database configuration status...
                   </p>
                 </div>
 
-                <div class="glass-panel" style="padding: 20px; border-left: 4px solid var(--color-warning); background: rgba(245, 158, 11, 0.04);">
+                <div class="glass-panel"
+                  style="padding: 20px; border-left: 4px solid var(--color-warning); background: rgba(245, 158, 11, 0.04);">
                   <h4 style="margin-bottom: 8px; font-size: 16px;">Configured Fine Policies</h4>
                   <div style="display: flex; gap: 30px; margin-top: 15px; flex-wrap: wrap;">
                     <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
                       <label for="settings-fine-rate">Daily Fine Rate (₹)</label>
-                      <input type="number" id="settings-fine-rate" class="form-control" value="1.00" step="0.25" onchange="updateFineRate(this.value)">
+                      <input type="number" id="settings-fine-rate" class="form-control" value="1.00" step="0.25"
+                        onchange="updateFineRate(this.value)">
                     </div>
                     <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
                       <label for="settings-max-books">Max Books Checked Out</label>
-                      <input type="number" id="settings-max-books" class="form-control" value="5" min="1" onchange="updateMaxBooksLimit(this.value)">
+                      <input type="number" id="settings-max-books" class="form-control" value="5" min="1"
+                        onchange="updateMaxBooksLimit(this.value)">
                     </div>
                   </div>
                 </div>
 
                 <div style="margin-top: 10px; text-align: center; color: var(--text-muted); font-size: 12px;">
-                  Smart Library Platform v1.0.0 &copy; 2026. Made with Google Gemini Pair Programming.
+                  Smart Library Platform &copy; 2026. Made By GS & AG (NYSOFT)
                 </div>
               </div>
             </div>
@@ -432,7 +463,8 @@
           </li>
         </ul>
         <div class="sidebar-profile">
-          <div class="profile-avatar" style="background: linear-gradient(135deg, var(--color-secondary), var(--color-info))">S</div>
+          <div class="profile-avatar"
+            style="background: linear-gradient(135deg, var(--color-secondary), var(--color-info))">S</div>
           <div class="profile-info">
             <div class="profile-name" id="student-profile-name">Student Member</div>
             <div class="profile-role" id="student-profile-lib">Library Name</div>
@@ -462,11 +494,16 @@
               </div>
               <div class="student-meta-details">
                 <h3 id="student-display-name">Student Name</h3>
-                <p id="student-display-username"><i class="fa-solid fa-user" style="margin-right: 6px;"></i> username</p>
-                <p id="student-display-email" style="margin-top: 4px;"><i class="fa-solid fa-envelope" style="margin-right: 6px;"></i> student@email.com</p>
-                <p id="student-display-phone" style="margin-top: 4px;"><i class="fa-solid fa-phone" style="margin-right: 6px;"></i> Mobile: <span>-</span></p>
-                <p id="student-display-address" style="margin-top: 4px;"><i class="fa-solid fa-location-dot" style="margin-right: 6px;"></i> Address: <span>-</span></p>
-                <p id="student-display-id" style="margin-top: 4px; font-size:12px; font-family:monospace;"><i class="fa-solid fa-fingerprint" style="margin-right: 6px;"></i> Member ID: mem_xxxx</p>
+                <p id="student-display-username"><i class="fa-solid fa-user" style="margin-right: 6px;"></i> username
+                </p>
+                <p id="student-display-email" style="margin-top: 4px;"><i class="fa-solid fa-envelope"
+                    style="margin-right: 6px;"></i> student@email.com</p>
+                <p id="student-display-phone" style="margin-top: 4px;"><i class="fa-solid fa-phone"
+                    style="margin-right: 6px;"></i> Mobile: <span>-</span></p>
+                <p id="student-display-address" style="margin-top: 4px;"><i class="fa-solid fa-location-dot"
+                    style="margin-right: 6px;"></i> Address: <span>-</span></p>
+                <p id="student-display-id" style="margin-top: 4px; font-size:12px; font-family:monospace;"><i
+                    class="fa-solid fa-fingerprint" style="margin-right: 6px;"></i> Member ID: mem_xxxx</p>
               </div>
 
               <!-- Student QR -->
@@ -508,7 +545,8 @@
               <div class="section-header">
                 <div class="search-box" style="max-width: 100%">
                   <i class="fa-solid fa-magnifying-glass"></i>
-                  <input type="text" id="student-book-search" class="form-control" placeholder="Search titles, authors, or genres in the catalog..." oninput="filterStudentBooks()">
+                  <input type="text" id="student-book-search" class="form-control"
+                    placeholder="Search titles, authors, or genres in the catalog..." oninput="filterStudentBooks()">
                 </div>
               </div>
 
@@ -528,7 +566,7 @@
                   <h3>My Borrowing Records</h3>
                 </div>
               </div>
-              
+
               <div class="table-responsive">
                 <table>
                   <thead>
@@ -578,11 +616,22 @@
         </div>
         <div class="form-group">
           <label for="book-genre">Genre / Category</label>
-          <input type="text" id="book-genre" class="form-control" placeholder="e.g., Fiction, Science Fiction, History" required>
+          <input type="text" id="book-genre" class="form-control" placeholder="e.g., Fiction, Science Fiction, History"
+            required>
         </div>
         <div class="form-group">
           <label for="book-isbn">ISBN Code</label>
           <input type="text" id="book-isbn" class="form-control" placeholder="e.g., 978-3-16-148410-0" required>
+        </div>
+        <div style="display: flex; gap: 15px;">
+          <div class="form-group" style="flex: 1;">
+            <label for="book-copy-count">Total Copies</label>
+            <input type="number" id="book-copy-count" class="form-control" value="1" min="1" required>
+          </div>
+          <div class="form-group" style="flex: 2;">
+            <label for="book-shelf-location">Shelf / Rack Location</label>
+            <input type="text" id="book-shelf-location" class="form-control" placeholder="e.g., Shelf A-4" required>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModal('modal-book')">Cancel</button>
@@ -607,11 +656,13 @@
         </div>
         <div class="form-group">
           <label for="member-username">Student Login Username</label>
-          <input type="text" id="member-username" class="form-control" placeholder="e.g., janedoe9" required autocomplete="username">
+          <input type="text" id="member-username" class="form-control" placeholder="e.g., janedoe9" required
+            autocomplete="username">
         </div>
         <div class="form-group">
           <label for="member-email">Email Address</label>
-          <input type="email" id="member-email" class="form-control" placeholder="e.g., jane@university.edu" required autocomplete="email">
+          <input type="email" id="member-email" class="form-control" placeholder="e.g., jane@university.edu" required
+            autocomplete="email">
         </div>
         <div class="form-group">
           <label for="member-phone">Mobile Number</label>
@@ -619,11 +670,13 @@
         </div>
         <div class="form-group">
           <label for="member-address">Home Address</label>
-          <textarea id="member-address" class="form-control" placeholder="e.g., 123 Street, City" rows="2" required></textarea>
+          <textarea id="member-address" class="form-control" placeholder="e.g., 123 Street, City" rows="2"
+            required></textarea>
         </div>
         <div class="form-group">
           <label for="member-password">Account Password</label>
-          <input type="password" id="member-password" class="form-control" placeholder="Create student password" required autocomplete="new-password">
+          <input type="password" id="member-password" class="form-control" placeholder="Create student password"
+            required autocomplete="new-password">
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModal('modal-member')">Cancel</button>
@@ -658,7 +711,8 @@
       <button class="modal-close" onclick="closeScannerModal()"><i class="fa-solid fa-xmark"></i></button>
       <div class="modal-header">
         <h3>Camera Scanner Active</h3>
-        <p style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Align the library QR code inside the frame</p>
+        <p style="font-size:12px; color:var(--text-secondary); margin-top:4px;">Align the library QR code inside the
+          frame</p>
       </div>
       <div class="scanner-camera-panel">
         <div class="scanner-viewport-container">
@@ -680,7 +734,8 @@
   </div>
 
   <!-- Hidden container for Temp File Scanning -->
-  <div id="qr-file-scanner-temp" style="position: absolute; left: -9999px; top: -9999px; width: 200px; height: 200px;"></div>
+  <div id="qr-file-scanner-temp" style="position: absolute; left: -9999px; top: -9999px; width: 200px; height: 200px;">
+  </div>
 
   <!-- Toast Toast Container -->
   <div class="toast-container" id="toast-root"></div>
@@ -691,4 +746,5 @@
   <script src="js/qr-handler.js"></script>
   <script src="js/app.js"></script>
 </body>
+
 </html>

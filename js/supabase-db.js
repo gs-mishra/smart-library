@@ -70,6 +70,7 @@ class SupabaseLibraryDB {
         name: l.name,
         adminUser: l.admin_user,
         adminPassword: l.admin_password,
+        code: l.code || '',
         createdAt: l.created_at
       }));
     } else {
@@ -77,8 +78,9 @@ class SupabaseLibraryDB {
     }
   }
 
-  async registerLibrary(name, adminUser, adminPassword) {
+  async registerLibrary(name, adminUser, adminPassword, code) {
     const usernameClean = adminUser.trim().toLowerCase();
+    const codeClean = code ? code.trim().toUpperCase() : name.slice(0, 3).toUpperCase();
     
     if (this.isSupabase) {
       // Check duplicate admin username
@@ -97,7 +99,8 @@ class SupabaseLibraryDB {
         id: id,
         name: name,
         admin_user: usernameClean,
-        admin_password: adminPassword
+        admin_password: adminPassword,
+        code: codeClean
       };
 
       const { data, error } = await this.client
@@ -113,6 +116,7 @@ class SupabaseLibraryDB {
         name: data.name,
         adminUser: data.admin_user,
         adminPassword: data.admin_password,
+        code: data.code,
         createdAt: data.created_at
       };
     } else {
@@ -125,6 +129,7 @@ class SupabaseLibraryDB {
         name: name,
         adminUser: usernameClean,
         adminPassword: adminPassword,
+        code: codeClean,
         createdAt: new Date().toISOString()
       };
       libs.push(newLib);
@@ -246,6 +251,8 @@ class SupabaseLibraryDB {
         author: b.author,
         genre: b.genre,
         isbn: b.isbn,
+        copyCount: parseInt(b.copy_count || 1),
+        shelfLocation: b.shelf_location || 'N/A',
         availability: b.availability,
         createdAt: b.created_at
       }));
@@ -264,6 +271,8 @@ class SupabaseLibraryDB {
       author: bookData.author.trim(),
       genre: bookData.genre.trim(),
       isbn: bookData.isbn.trim(),
+      copy_count: parseInt(bookData.copyCount || 1),
+      shelf_location: bookData.shelfLocation ? bookData.shelfLocation.trim() : 'N/A',
       availability: bookData.availability || 'available'
     };
 
@@ -283,6 +292,8 @@ class SupabaseLibraryDB {
         author: data.author,
         genre: data.genre,
         isbn: data.isbn,
+        copyCount: data.copy_count,
+        shelfLocation: data.shelf_location,
         availability: data.availability,
         createdAt: data.created_at
       };
@@ -295,6 +306,8 @@ class SupabaseLibraryDB {
         author: bookRow.author,
         genre: bookRow.genre,
         isbn: bookRow.isbn,
+        copyCount: bookRow.copy_count,
+        shelfLocation: bookRow.shelf_location,
         availability: bookRow.availability,
         createdAt: new Date().toISOString()
       };
@@ -310,6 +323,8 @@ class SupabaseLibraryDB {
     if (bookData.author !== undefined) bookRow.author = bookData.author.trim();
     if (bookData.genre !== undefined) bookRow.genre = bookData.genre.trim();
     if (bookData.isbn !== undefined) bookRow.isbn = bookData.isbn.trim();
+    if (bookData.copyCount !== undefined) bookRow.copy_count = parseInt(bookData.copyCount);
+    if (bookData.shelfLocation !== undefined) bookRow.shelf_location = bookData.shelfLocation.trim();
     if (bookData.availability !== undefined) bookRow.availability = bookData.availability;
 
     if (this.isSupabase) {
@@ -330,6 +345,8 @@ class SupabaseLibraryDB {
         author: data.author,
         genre: data.genre,
         isbn: data.isbn,
+        copyCount: data.copy_count,
+        shelfLocation: data.shelf_location,
         availability: data.availability,
         createdAt: data.created_at
       };
@@ -390,21 +407,46 @@ class SupabaseLibraryDB {
   }
 
   async addMember(libraryId, memberData) {
-    const id = 'mem_' + Math.random().toString(36).substr(2, 9);
     const usernameClean = memberData.username.trim().toLowerCase();
-    
-    const memberRow = {
-      id: id,
-      library_id: libraryId,
-      username: usernameClean,
-      name: memberData.name.trim(),
-      email: memberData.email.trim(),
-      phone: memberData.phone.trim(),
-      address: memberData.address ? memberData.address.trim() : null,
-      password: memberData.password
-    };
+    let id = "";
 
     if (this.isSupabase) {
+      // 1. Fetch Library Short Code
+      let libCode = "CEN";
+      const { data: lib, error: libErr } = await this.client
+        .from('libraries')
+        .select('code, name')
+        .eq('id', libraryId)
+        .maybeSingle();
+      
+      if (lib) {
+        libCode = (lib.code ? lib.code : lib.name.slice(0, 3)).toUpperCase().trim();
+      }
+
+      // 2. Fetch current member count for this library
+      const { count, error: countErr } = await this.client
+        .from('members')
+        .select('*', { count: 'exact', head: true })
+        .eq('library_id', libraryId);
+      
+      const seq = (count || 0) + 1;
+      const seqStr = seq.toString().padStart(4, '0');
+      const year = new Date().getFullYear();
+      
+      // Custom ID: Lib[Year][Code][Sequence]
+      id = `Lib${year}${libCode}${seqStr}`;
+
+      const memberRow = {
+        id: id,
+        library_id: libraryId,
+        username: usernameClean,
+        name: memberData.name.trim(),
+        email: memberData.email.trim(),
+        phone: memberData.phone.trim(),
+        address: memberData.address ? memberData.address.trim() : null,
+        password: memberData.password
+      };
+
       // Uniqueness check in library
       const { data: existing, error: queryErr } = await this.client
         .from('members')
@@ -438,18 +480,33 @@ class SupabaseLibraryDB {
       };
     } else {
       const members = this._getLocal('smart_lib_members');
+      const libs = this._getLocal('smart_lib_libraries');
+      
+      const lib = libs.find(l => l.id === libraryId);
+      let libCode = "CEN";
+      if (lib) {
+        libCode = (lib.code ? lib.code : lib.name.slice(0, 3)).toUpperCase().trim();
+      }
+
+      const count = members.filter(m => m.libraryId === libraryId).length;
+      const seq = count + 1;
+      const seqStr = seq.toString().padStart(4, '0');
+      const year = new Date().getFullYear();
+      id = `Lib${year}${libCode}${seqStr}`;
+
       if (members.some(m => m.libraryId === libraryId && m.username === usernameClean)) {
         throw new Error("Student username already exists in this library.");
       }
+
       const memberObj = {
         id: id,
         libraryId,
         username: usernameClean,
-        name: memberRow.name,
-        email: memberRow.email,
-        phone: memberRow.phone,
-        address: memberRow.address,
-        password: memberRow.password,
+        name: memberData.name.trim(),
+        email: memberData.email.trim(),
+        phone: memberData.phone.trim(),
+        address: memberData.address ? memberData.address.trim() : null,
+        password: memberData.password,
         createdAt: new Date().toISOString()
       };
       members.push(memberObj);
