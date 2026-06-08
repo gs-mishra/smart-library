@@ -48,3 +48,13 @@ CREATE TABLE IF NOT EXISTS issues (
     fine_paid NUMERIC DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'issued' CHECK (status IN ('issued', 'returned'))
 );
+
+-- 5. Row Level Security (RLS) Configuration
+-- Because this is a frontend client application querying via the public 'anon' key,
+-- you must disable RLS on the tables to allow immediate reading and writing.
+-- Execute these commands in your SQL Editor:
+
+ALTER TABLE libraries DISABLE ROW LEVEL SECURITY;
+ALTER TABLE members DISABLE ROW LEVEL SECURITY;
+ALTER TABLE books DISABLE ROW LEVEL SECURITY;
+ALTER TABLE issues DISABLE ROW LEVEL SECURITY;
