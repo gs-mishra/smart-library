@@ -44,7 +44,7 @@ function showToast(message, type = 'info') {
 
   const toast = document.createElement("div");
   toast.className = `toast ${type}`;
-  
+
   let icon = 'info-circle';
   if (type === 'success') icon = 'circle-check';
   if (type === 'danger') icon = 'triangle-exclamation';
@@ -116,7 +116,7 @@ async function loadLibrariesDropdown() {
 
   try {
     const libraries = await window.smartLibDB.getLibraries();
-    
+
     if (libraries.length === 0) {
       select.innerHTML = '<option value="" disabled>No libraries registered. Please register a library first.</option>';
       // Automatically swap to register tab to guide new user
@@ -177,7 +177,7 @@ async function handleLoginSubmit(e) {
   try {
     const session = await window.smartLibDB.loginUser(libraryId, user, pass, currentLoginRole);
     currentSession = session;
-    
+
     showToast(`Logged in successfully! Welcome, ${session.name}`, "success");
     e.target.reset();
 
@@ -207,12 +207,12 @@ function enterAdminDashboard() {
   document.getElementById("admin-profile-name").textContent = currentSession.name;
   document.getElementById("admin-profile-lib").textContent = currentSession.libraryName;
   document.getElementById("admin-active-lib-badge").textContent = `ID: ${currentSession.libraryId}`;
-  
+
   // Set default tab active
   const sidebarLinks = document.querySelectorAll("#admin-view .sidebar-link");
   sidebarLinks.forEach(l => l.classList.remove("active"));
   sidebarLinks[0].classList.add("active");
-  
+
   switchDashboardTab('admin-sub-overview', sidebarLinks[0]);
 }
 
@@ -280,7 +280,7 @@ async function loadAdminStatsAndRecent() {
       const row = document.createElement("tr");
       const date = new Date(issue.issueDate).toLocaleDateString();
       const dueDate = new Date(issue.dueDate).toLocaleDateString();
-      
+
       const fineVal = calculateIssueFine(issue);
       const isReturned = issue.status === 'returned';
 
@@ -363,25 +363,25 @@ function filterBooksTable() {
   const q = document.getElementById("book-search-input").value.toLowerCase().trim();
   const filterAuthor = document.getElementById("book-filter-author").value;
   const filterGenre = document.getElementById("book-filter-genre").value;
-  
+
   let filtered = cachedBooks;
-  
+
   if (q) {
-    filtered = filtered.filter(b => 
-      b.title.toLowerCase().includes(q) || 
+    filtered = filtered.filter(b =>
+      b.title.toLowerCase().includes(q) ||
       b.isbn.toLowerCase().includes(q) ||
       b.id.toLowerCase().includes(q)
     );
   }
-  
+
   if (filterAuthor) {
     filtered = filtered.filter(b => b.author === filterAuthor);
   }
-  
+
   if (filterGenre) {
     filtered = filtered.filter(b => b.genre === filterGenre);
   }
-  
+
   renderBooksTable(filtered);
 }
 
@@ -389,13 +389,13 @@ function populateBookFilterSelects(books) {
   const authorSelect = document.getElementById("book-filter-author");
   const genreSelect = document.getElementById("book-filter-genre");
   if (!authorSelect || !genreSelect) return;
-  
+
   const selectedAuthor = authorSelect.value;
   const selectedGenre = genreSelect.value;
-  
+
   const authors = [...new Set(books.map(b => b.author))].sort();
   const genres = [...new Set(books.map(b => b.genre))].sort();
-  
+
   authorSelect.innerHTML = '<option value="">All Authors</option>';
   authors.forEach(auth => {
     const opt = document.createElement("option");
@@ -404,7 +404,7 @@ function populateBookFilterSelects(books) {
     if (auth === selectedAuthor) opt.selected = true;
     authorSelect.appendChild(opt);
   });
-  
+
   genreSelect.innerHTML = '<option value="">All Categories</option>';
   genres.forEach(g => {
     const opt = document.createElement("option");
@@ -557,9 +557,9 @@ function filterMembersTable() {
     loadAdminMembersTable();
     return;
   }
-  const filtered = cachedMembers.filter(m => 
-    m.name.toLowerCase().includes(q) || 
-    m.username.toLowerCase().includes(q) || 
+  const filtered = cachedMembers.filter(m =>
+    m.name.toLowerCase().includes(q) ||
+    m.username.toLowerCase().includes(q) ||
     m.email.toLowerCase().includes(q) ||
     m.id.includes(q)
   );
@@ -627,16 +627,16 @@ async function handleMemberFormSubmit(e) {
 async function deleteMemberRecord(memberId) {
   try {
     const libId = currentSession.libraryId;
-    
+
     // Fetch all active issues for this library
     const issues = await window.smartLibDB.getIssues(libId);
     const activeIssues = issues.filter(i => i.memberId === memberId && i.status === 'issued');
-    
+
     let confirmMsg = "Are you sure you want to remove this student? All their checkout history will be permanently deleted.";
     if (activeIssues.length > 0) {
       confirmMsg = `WARNING: This student currently has ${activeIssues.length} book(s) checked out and NOT returned!\n\nDeleting this student will automatically release these books (marking them 'available' in the catalog) and permanently delete this member's profile and entire borrowing history.\n\nAre you sure you want to proceed?`;
     }
-    
+
     if (!confirm(confirmMsg)) return;
 
     await window.smartLibDB.deleteMember(libId, memberId);
@@ -674,8 +674,8 @@ function showDeskMemberSuggestions(val) {
     container.style.display = "none";
     return;
   }
-  const filtered = allLibMembersList.filter(m => 
-    m.name.toLowerCase().includes(val.toLowerCase()) || 
+  const filtered = allLibMembersList.filter(m =>
+    m.name.toLowerCase().includes(val.toLowerCase()) ||
     m.username.toLowerCase().includes(val.toLowerCase()) ||
     m.id.toLowerCase().includes(val.toLowerCase())
   ).slice(0, 5);
@@ -709,9 +709,9 @@ function showDeskBookSuggestions(val) {
     container.style.display = "none";
     return;
   }
-  const filtered = allLibBooksList.filter(b => 
-    b.title.toLowerCase().includes(val.toLowerCase()) || 
-    b.author.toLowerCase().includes(val.toLowerCase()) || 
+  const filtered = allLibBooksList.filter(b =>
+    b.title.toLowerCase().includes(val.toLowerCase()) ||
+    b.author.toLowerCase().includes(val.toLowerCase()) ||
     b.id.toLowerCase().includes(val.toLowerCase())
   ).slice(0, 5);
 
@@ -818,10 +818,10 @@ async function handleDeskOperationSubmit(e) {
 
     // Call API
     await window.smartLibDB.issueBook(libId, bookId, memberId, days);
-    
+
     showToast("Book issued successfully!", "success");
     e.target.reset();
-    
+
     // Refresh Desk
     loadAdminDesk();
   } catch (err) {
@@ -842,7 +842,7 @@ async function processBookReturn(issueId, fineVal) {
     const libId = currentSession.libraryId;
     await window.smartLibDB.returnBook(libId, issueId, fineVal);
     showToast("Book returned and availability updated.", "success");
-    
+
     // Refresh Desk
     loadAdminDesk();
   } catch (err) {
@@ -854,26 +854,26 @@ async function processBookReturn(issueId, fineVal) {
 async function processQuickReturnByBookId(scannedId) {
   try {
     const libId = currentSession.libraryId;
-    
+
     // Find book by scanned code (ID or ISBN) from global catalog cache
     let resolvedBookId = scannedId;
     let bookTitle = scannedId;
-    
+
     const book = allLibBooksList.find(b => b.id === scannedId || b.isbn === scannedId);
     if (book) {
       resolvedBookId = book.id;
       bookTitle = book.title;
     }
-    
+
     // Fetch all active issues for this library
     const issues = await window.smartLibDB.getIssues(libId);
     const activeIssue = issues.find(i => i.bookId === resolvedBookId && i.status === 'issued');
-    
+
     if (!activeIssue) {
       showToast(`No active checkout records found for "${bookTitle}".`, "danger");
       return;
     }
-    
+
     const fineVal = calculateIssueFine(activeIssue);
     let collectText = "";
     if (fineVal > 0) {
@@ -882,11 +882,11 @@ async function processQuickReturnByBookId(scannedId) {
         return;
       }
     }
-    
+
     // Settle return
     await window.smartLibDB.returnBook(libId, activeIssue.id, fineVal);
     showToast(`Successfully returned "${activeIssue.bookTitle}"!`, "success");
-    
+
     // Refresh Desk views
     loadAdminDesk();
   } catch (err) {
@@ -1030,7 +1030,7 @@ async function loadStudentProfile() {
     // Display fields
     document.getElementById("student-display-name").textContent = currentSession.name;
     document.getElementById("student-display-username").innerHTML = `<i class="fa-solid fa-user" style="margin-right: 6px;"></i> Username: <code>${currentSession.username}</code>`;
-    
+
     // Find detailed user email
     const members = await window.smartLibDB.getMembers(libId);
     const profile = members.find(m => m.id === memId);
@@ -1059,7 +1059,7 @@ async function loadStudentProfile() {
 
     myIssues.forEach(i => {
       myFines += calculateIssueFine(i);
-      
+
       if (i.status === 'issued') {
         const dDate = new Date(i.dueDate);
         if (!nextDueDate || dDate < nextDueDate) {
@@ -1125,24 +1125,24 @@ function filterStudentBooks() {
   const q = document.getElementById("student-book-search").value.toLowerCase().trim();
   const filterAuthor = document.getElementById("student-filter-author").value;
   const filterGenre = document.getElementById("student-filter-genre").value;
-  
+
   let filtered = studentCachedBooks;
-  
+
   if (q) {
-    filtered = filtered.filter(b => 
-      b.title.toLowerCase().includes(q) || 
+    filtered = filtered.filter(b =>
+      b.title.toLowerCase().includes(q) ||
       b.isbn.toLowerCase().includes(q)
     );
   }
-  
+
   if (filterAuthor) {
     filtered = filtered.filter(b => b.author === filterAuthor);
   }
-  
+
   if (filterGenre) {
     filtered = filtered.filter(b => b.genre === filterGenre);
   }
-  
+
   renderStudentBooksGrid(filtered);
 }
 
@@ -1150,13 +1150,13 @@ function populateStudentFilterSelects(books) {
   const authorSelect = document.getElementById("student-filter-author");
   const genreSelect = document.getElementById("student-filter-genre");
   if (!authorSelect || !genreSelect) return;
-  
+
   const selectedAuthor = authorSelect.value;
   const selectedGenre = genreSelect.value;
-  
+
   const authors = [...new Set(books.map(b => b.author))].sort();
   const genres = [...new Set(books.map(b => b.genre))].sort();
-  
+
   authorSelect.innerHTML = '<option value="">All Authors</option>';
   authors.forEach(auth => {
     const opt = document.createElement("option");
@@ -1165,7 +1165,7 @@ function populateStudentFilterSelects(books) {
     if (auth === selectedAuthor) opt.selected = true;
     authorSelect.appendChild(opt);
   });
-  
+
   genreSelect.innerHTML = '<option value="">All Categories</option>';
   genres.forEach(g => {
     const opt = document.createElement("option");
@@ -1206,7 +1206,7 @@ async function loadStudentBorrowRecords() {
       const issueDate = new Date(i.issueDate).toLocaleDateString();
       const dueDate = new Date(i.dueDate).toLocaleDateString();
       const returnDate = i.returnDate ? new Date(i.returnDate).toLocaleDateString() : "Pending Return";
-      
+
       const fineVal = calculateIssueFine(i);
       const isReturned = i.status === 'returned';
 
@@ -1269,17 +1269,17 @@ function closeModal(modalId) {
 function openQRCodeModal(dataText, headerTitle) {
   document.getElementById("modal-qr-header-title").textContent = headerTitle;
   document.getElementById("modal-qr-description").textContent = `Data content: ${dataText}. Scan to load this ID into the desk forms.`;
-  
+
   const canvas = document.getElementById("modal-qr-canvas");
   window.smartLibQR.generate(canvas, dataText, 200, 200);
-  
+
   openModal("modal-qr");
 }
 
 function downloadModalQRCode() {
   const qrDiv = document.getElementById("modal-qr-canvas");
   const img = qrDiv.querySelector("img");
-  
+
   if (img) {
     const link = document.createElement("a");
     link.href = img.src;
@@ -1333,7 +1333,7 @@ function closeScannerModal() {
 function handleQRScanSuccess(decodedText) {
   // Parse code
   const result = window.smartLibQR.parseCode(decodedText);
-  
+
   closeScannerModal();
   showToast(`QR Code decoded: ${result.id} (${result.type})`, "success");
 
@@ -1412,7 +1412,7 @@ function viewMyIDCard() {
 
 function displayIDCardModal(member) {
   activeIDCardMember = member;
-  
+
   // Fill text details
   document.getElementById("idcard-lib-name").textContent = member.libraryName || currentSession.libraryName || "Smart Library";
   document.getElementById("idcard-student-name").textContent = member.name;
@@ -1420,12 +1420,12 @@ function displayIDCardModal(member) {
   document.getElementById("idcard-student-username").textContent = member.username;
   document.getElementById("idcard-student-phone").textContent = member.phone || "N/A";
   document.getElementById("idcard-student-email").textContent = member.email || "N/A";
-  
+
   // Generate QR inside the card
   const holder = document.getElementById("idcard-qr-holder");
   const qrValue = `smartlib://member/${member.id}`;
   window.smartLibQR.generate(holder, qrValue, 75, 75);
-  
+
   openModal("modal-idcard");
 }
 
@@ -1434,16 +1434,16 @@ async function downloadMemberIDCard() {
     showToast("No active card selected to download.", "danger");
     return;
   }
-  
+
   const member = activeIDCardMember;
   const libName = (member.libraryName || currentSession.libraryName || "Smart Library").toUpperCase();
-  
+
   // 1. Create canvas element
   const canvas = document.createElement("canvas");
   canvas.width = 380;
   canvas.height = 240;
   const ctx = canvas.getContext("2d");
-  
+
   // 2. Draw Card Background (Rounded Rectangle styling)
   ctx.fillStyle = "#1e3a8a"; // Navy base
   ctx.beginPath();
@@ -1453,7 +1453,7 @@ async function downloadMemberIDCard() {
     ctx.rect(0, 0, canvas.width, canvas.height);
   }
   ctx.fill();
-  
+
   // Draw subtle overlay gradient
   const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
   grad.addColorStop(0, "rgba(255, 255, 255, 0.05)");
@@ -1481,15 +1481,15 @@ async function downloadMemberIDCard() {
   // 3. Draw Header Section
   ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
   ctx.fillRect(0, 0, canvas.width, 45); // Banner bg
-  
+
   ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
   ctx.fillRect(0, 44, canvas.width, 1); // Border bottom
-  
+
   // Library Title
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 13px 'Outfit', sans-serif";
   ctx.fillText(libName, 18, 26);
-  
+
   // Badge Title
   ctx.fillStyle = "#93c5fd";
   ctx.font = "600 9px 'Outfit', sans-serif";
@@ -1502,7 +1502,7 @@ async function downloadMemberIDCard() {
   ctx.beginPath();
   ctx.arc(40, 100, 22, 0, Math.PI * 2);
   ctx.fill();
-  
+
   ctx.fillStyle = "#1e3a8a";
   ctx.beginPath();
   ctx.arc(40, 95, 8, 0, Math.PI * 2);
@@ -1515,15 +1515,15 @@ async function downloadMemberIDCard() {
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 16px 'Outfit', sans-serif";
   ctx.fillText(member.name, 80, 85);
-  
+
   ctx.fillStyle = "#93c5fd";
   ctx.font = "normal 11px monospace";
   ctx.fillText(`ID: ${member.id}`, 80, 104);
-  
+
   ctx.fillStyle = "#e2e8f0";
   ctx.font = "500 11px 'Outfit', sans-serif";
   ctx.fillText(`Username: ${member.username}`, 80, 122);
-  
+
   ctx.fillStyle = "#cbd5e1";
   ctx.font = "normal 10px 'Outfit', sans-serif";
   ctx.fillText(`Phone: ${member.phone || 'N/A'}`, 80, 140);
@@ -1532,7 +1532,7 @@ async function downloadMemberIDCard() {
   // 6. Draw QR Code representation
   const qrDiv = document.getElementById("idcard-qr-holder");
   const qrImg = qrDiv.querySelector("img") || qrDiv.querySelector("canvas");
-  
+
   if (qrImg) {
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
