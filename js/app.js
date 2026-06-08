@@ -793,6 +793,50 @@ async function processBookReturn(issueId, fineVal) {
   }
 }
 
+// Quick Return Scanner Process
+async function processQuickReturnByBookId(scannedId) {
+  try {
+    const libId = currentSession.libraryId;
+    
+    // Find book by scanned code (ID or ISBN) from global catalog cache
+    let resolvedBookId = scannedId;
+    let bookTitle = scannedId;
+    
+    const book = allLibBooksList.find(b => b.id === scannedId || b.isbn === scannedId);
+    if (book) {
+      resolvedBookId = book.id;
+      bookTitle = book.title;
+    }
+    
+    // Fetch all active issues for this library
+    const issues = await window.smartLibDB.getIssues(libId);
+    const activeIssue = issues.find(i => i.bookId === resolvedBookId && i.status === 'issued');
+    
+    if (!activeIssue) {
+      showToast(`No active checkout records found for "${bookTitle}".`, "danger");
+      return;
+    }
+    
+    const fineVal = calculateIssueFine(activeIssue);
+    let collectText = "";
+    if (fineVal > 0) {
+      collectText = `An overdue fine of ₹${fineVal.toFixed(2)} is due. Please collect this amount before returning. `;
+      if (!confirm(`${collectText}Confirm return of "${activeIssue.bookTitle}"?`)) {
+        return;
+      }
+    }
+    
+    // Settle return
+    await window.smartLibDB.returnBook(libId, activeIssue.id, fineVal);
+    showToast(`Successfully returned "${activeIssue.bookTitle}"!`, "success");
+    
+    // Refresh Desk views
+    loadAdminDesk();
+  } catch (err) {
+    showToast(err.message, "danger");
+  }
+}
+
 // Offline QR Simulator list population
 function populateScannerSimulators() {
   const booksContainer = document.getElementById("mock-books-list");
@@ -1208,6 +1252,12 @@ function handleQRScanSuccess(decodedText) {
       document.getElementById("desk-book-input").value = result.id;
     } else {
       document.getElementById("desk-member-input").value = result.id;
+    }
+  } else if (currentScannerTarget === 'return') {
+    if (result.type === 'member') {
+      showToast("Error: You scanned a Member ID. Please scan a Book QR to process a return.", "danger");
+    } else {
+      processQuickReturnByBookId(result.id);
     }
   } else {
     // Default fallback to fill whatever was open or alert
