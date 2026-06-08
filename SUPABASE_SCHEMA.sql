@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS members (
     username TEXT NOT NULL,
     name TEXT NOT NULL,
     email TEXT NOT NULL,
+    phone TEXT NOT NULL,
+    address TEXT,
     password TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT unique_lib_username UNIQUE (library_id, username)
@@ -58,3 +60,10 @@ ALTER TABLE libraries DISABLE ROW LEVEL SECURITY;
 ALTER TABLE members DISABLE ROW LEVEL SECURITY;
 ALTER TABLE books DISABLE ROW LEVEL SECURITY;
 ALTER TABLE issues DISABLE ROW LEVEL SECURITY;
+
+-- 6. Database Update script (If Database is Already Initialized)
+-- If you already set up the tables and want to upgrade them in-place,
+-- execute these lines in your SQL Editor:
+-- 
+-- ALTER TABLE members ADD COLUMN phone TEXT NOT NULL DEFAULT '0000000000';
+-- ALTER TABLE members ADD COLUMN address TEXT;

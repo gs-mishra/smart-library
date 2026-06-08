@@ -171,7 +171,7 @@
               </div>
               <div class="stat-card glass-panel danger">
                 <div class="stat-details">
-                  <h3 id="stat-active-fines">$0.00</h3>
+                  <h3 id="stat-active-fines">₹0.00</h3>
                   <p>Total Fines</p>
                 </div>
                 <div class="stat-icon"><i class="fa-solid fa-circle-dollar-to-slot"></i></div>
@@ -262,7 +262,8 @@
                       <th>Member ID / QR</th>
                       <th>Name</th>
                       <th>Username</th>
-                      <th>Email</th>
+                      <th>Contact (Email/Mobile)</th>
+                      <th>Address</th>
                       <th>Issued Count</th>
                       <th>Fines Due</th>
                       <th>Actions</th>
@@ -384,7 +385,7 @@
                   <h4 style="margin-bottom: 8px; font-size: 16px;">Configured Fine Policies</h4>
                   <div style="display: flex; gap: 30px; margin-top: 15px; flex-wrap: wrap;">
                     <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
-                      <label for="settings-fine-rate">Daily Fine Rate ($)</label>
+                      <label for="settings-fine-rate">Daily Fine Rate (₹)</label>
                       <input type="number" id="settings-fine-rate" class="form-control" value="1.00" step="0.25" onchange="updateFineRate(this.value)">
                     </div>
                     <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
@@ -463,6 +464,8 @@
                 <h3 id="student-display-name">Student Name</h3>
                 <p id="student-display-username"><i class="fa-solid fa-user" style="margin-right: 6px;"></i> username</p>
                 <p id="student-display-email" style="margin-top: 4px;"><i class="fa-solid fa-envelope" style="margin-right: 6px;"></i> student@email.com</p>
+                <p id="student-display-phone" style="margin-top: 4px;"><i class="fa-solid fa-phone" style="margin-right: 6px;"></i> Mobile: <span>-</span></p>
+                <p id="student-display-address" style="margin-top: 4px;"><i class="fa-solid fa-location-dot" style="margin-right: 6px;"></i> Address: <span>-</span></p>
                 <p id="student-display-id" style="margin-top: 4px; font-size:12px; font-family:monospace;"><i class="fa-solid fa-fingerprint" style="margin-right: 6px;"></i> Member ID: mem_xxxx</p>
               </div>
 
@@ -491,7 +494,7 @@
               </div>
               <div class="stat-card glass-panel danger">
                 <div class="stat-details">
-                  <h3 id="student-stat-fines">$0.00</h3>
+                  <h3 id="student-stat-fines">₹0.00</h3>
                   <p>Unpaid Fines</p>
                 </div>
                 <div class="stat-icon"><i class="fa-solid fa-circle-dollar-to-slot"></i></div>
@@ -609,6 +612,14 @@
         <div class="form-group">
           <label for="member-email">Email Address</label>
           <input type="email" id="member-email" class="form-control" placeholder="e.g., jane@university.edu" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="member-phone">Mobile Number</label>
+          <input type="tel" id="member-phone" class="form-control" placeholder="e.g., 9876543210" required>
+        </div>
+        <div class="form-group">
+          <label for="member-address">Home Address</label>
+          <textarea id="member-address" class="form-control" placeholder="e.g., 123 Street, City" rows="2" required></textarea>
         </div>
         <div class="form-group">
           <label for="member-password">Account Password</label>

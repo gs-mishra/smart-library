@@ -261,7 +261,7 @@ async function loadAdminStatsAndRecent() {
     issues.forEach(i => {
       totalFines += calculateIssueFine(i);
     });
-    document.getElementById("stat-active-fines").textContent = `$${totalFines.toFixed(2)}`;
+    document.getElementById("stat-active-fines").textContent = `₹${totalFines.toFixed(2)}`;
 
     // Build Recent Activities (merging creation logs, borrows, returns)
     const recentActTable = document.getElementById("table-recent-activities-body");
@@ -291,7 +291,7 @@ async function loadAdminStatsAndRecent() {
         <td>${dueDate}</td>
         <td>
           <span style="font-weight:600; color: ${fineVal > 0 ? 'var(--color-accent)' : 'var(--color-secondary)'}">
-            ${fineVal > 0 ? `Fine: $${fineVal.toFixed(2)}` : 'No Fine'}
+            ${fineVal > 0 ? `Fine: ₹${fineVal.toFixed(2)}` : 'No Fine'}
           </span>
         </td>
       `;
@@ -450,7 +450,7 @@ function renderMembersTable(members, issues = []) {
   tbody.innerHTML = "";
 
   if (members.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No student members registered yet. Only admins can register members.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No student members registered yet. Only admins can register members.</td></tr>`;
     return;
   }
 
@@ -476,11 +476,15 @@ function renderMembersTable(members, issues = []) {
       </td>
       <td><strong>${m.name}</strong></td>
       <td><code>${m.username}</code></td>
-      <td>${m.email}</td>
+      <td>
+        <div style="font-size:13px;">${m.email}</div>
+        <div style="font-size:11px; color: var(--text-secondary); margin-top:2px;"><i class="fa-solid fa-phone" style="font-size:9px; margin-right:4px;"></i>${m.phone || 'N/A'}</div>
+      </td>
+      <td><span style="font-size:13px; max-width:180px; display:block; word-wrap:break-word;">${m.address || 'N/A'}</span></td>
       <td><span class="badge ${activeIssues.length > 0 ? 'badge-info' : 'badge-success'}">${activeIssues.length} Active</span></td>
       <td>
         <span style="font-weight:600; color: ${totalFine > 0 ? 'var(--color-accent)' : 'var(--text-muted)'}">
-          $${totalFine.toFixed(2)}
+          ₹${totalFine.toFixed(2)}
         </span>
       </td>
       <td>
@@ -528,6 +532,8 @@ function openEditMemberModal(memberId) {
   document.getElementById("member-username").value = m.username;
   document.getElementById("member-username").disabled = true; // Protect primary logins username changes
   document.getElementById("member-email").value = m.email;
+  document.getElementById("member-phone").value = m.phone || "";
+  document.getElementById("member-address").value = m.address || "";
   document.getElementById("member-password").value = m.password;
 
   openModal("modal-member");
@@ -539,9 +545,11 @@ async function handleMemberFormSubmit(e) {
   const name = document.getElementById("member-name").value;
   const username = document.getElementById("member-username").value;
   const email = document.getElementById("member-email").value;
+  const phone = document.getElementById("member-phone").value;
+  const address = document.getElementById("member-address").value;
   const password = document.getElementById("member-password").value;
 
-  const data = { name, username, email, password };
+  const data = { name, username, email, phone, address, password };
 
   try {
     const libId = currentSession.libraryId;
@@ -714,7 +722,7 @@ async function loadActiveCheckoutsList() {
         <div style="font-size:12px; color: var(--text-muted); display:flex; justify-content:space-between; margin-top:8px; border-top:1px solid var(--border-color); padding-top:8px;">
           <span>Due: ${dueDateStr}</span>
           <span style="font-weight:600; color: ${isOverdue ? 'var(--color-accent)' : 'var(--color-secondary)'}">
-            ${isOverdue ? `Fine: $${fineVal.toFixed(2)}` : 'No Fine'}
+            ${isOverdue ? `Fine: ₹${fineVal.toFixed(2)}` : 'No Fine'}
           </span>
         </div>
         <div style="margin-top:10px; display:flex; gap: 8px;">
@@ -757,7 +765,7 @@ async function handleDeskOperationSubmit(e) {
 async function processBookReturn(issueId, fineVal) {
   let collectText = "";
   if (fineVal > 0) {
-    collectText = `An overdue fine of $${fineVal.toFixed(2)} is due. Please collect this amount before returning. `;
+    collectText = `An overdue fine of ₹${fineVal.toFixed(2)} is due. Please collect this amount before returning. `;
   }
 
   if (!confirm(`${collectText}Confirm return of this book?`)) return;
@@ -837,7 +845,7 @@ function updateFineRate(val) {
   }
   appSettings.fineRate = parsed;
   localStorage.setItem("smart_lib_setting_fine_rate", parsed);
-  showToast(`Daily fine rate updated to $${parsed.toFixed(2)}`, "success");
+  showToast(`Daily fine rate updated to ₹${parsed.toFixed(2)}`, "success");
 }
 
 function updateMaxBooksLimit(val) {
@@ -916,6 +924,8 @@ async function loadStudentProfile() {
     const profile = members.find(m => m.id === memId);
     if (profile) {
       document.getElementById("student-display-email").innerHTML = `<i class="fa-solid fa-envelope" style="margin-right: 6px;"></i> Email: ${profile.email}`;
+      document.getElementById("student-display-phone").innerHTML = `<i class="fa-solid fa-phone" style="margin-right: 6px;"></i> Mobile: ${profile.phone || 'N/A'}`;
+      document.getElementById("student-display-address").innerHTML = `<i class="fa-solid fa-location-dot" style="margin-right: 6px;"></i> Address: ${profile.address || 'N/A'}`;
     }
     document.getElementById("student-display-id").innerHTML = `<i class="fa-solid fa-fingerprint" style="margin-right: 6px;"></i> Student Code: <code>${memId}</code>`;
 
@@ -946,7 +956,7 @@ async function loadStudentProfile() {
       }
     });
 
-    document.getElementById("student-stat-fines").textContent = `$${myFines.toFixed(2)}`;
+    document.getElementById("student-stat-fines").textContent = `₹${myFines.toFixed(2)}`;
     document.getElementById("student-stat-due-date").textContent = nextDueDate ? nextDueDate.toLocaleDateString() : "None";
 
   } catch (err) {
@@ -1049,7 +1059,7 @@ async function loadStudentBorrowRecords() {
         <td><span style="color: ${isReturned ? 'var(--text-primary)' : 'var(--color-warning)'}">${returnDate}</span></td>
         <td>
           <span style="font-weight:600; color: ${fineVal > 0 ? 'var(--color-accent)' : 'var(--color-secondary)'}">
-            ${fineVal > 0 ? `$${fineVal.toFixed(2)}` : 'No Fine'}
+            ${fineVal > 0 ? `₹${fineVal.toFixed(2)}` : 'No Fine'}
           </span>
         </td>
         <td><span class="badge ${isReturned ? 'badge-success' : 'badge-info'}">${i.status}</span></td>

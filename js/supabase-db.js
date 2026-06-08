@@ -378,6 +378,8 @@ class SupabaseLibraryDB {
         username: m.username,
         name: m.name,
         email: m.email,
+        phone: m.phone,
+        address: m.address,
         password: m.password,
         createdAt: m.created_at
       }));
@@ -397,6 +399,8 @@ class SupabaseLibraryDB {
       username: usernameClean,
       name: memberData.name.trim(),
       email: memberData.email.trim(),
+      phone: memberData.phone.trim(),
+      address: memberData.address ? memberData.address.trim() : null,
       password: memberData.password
     };
 
@@ -427,6 +431,8 @@ class SupabaseLibraryDB {
         username: data.username,
         name: data.name,
         email: data.email,
+        phone: data.phone,
+        address: data.address,
         password: data.password,
         createdAt: data.created_at
       };
@@ -441,6 +447,8 @@ class SupabaseLibraryDB {
         username: usernameClean,
         name: memberRow.name,
         email: memberRow.email,
+        phone: memberRow.phone,
+        address: memberRow.address,
         password: memberRow.password,
         createdAt: new Date().toISOString()
       };
@@ -454,6 +462,8 @@ class SupabaseLibraryDB {
     const memberRow = {};
     if (memberData.name !== undefined) memberRow.name = memberData.name.trim();
     if (memberData.email !== undefined) memberRow.email = memberData.email.trim();
+    if (memberData.phone !== undefined) memberRow.phone = memberData.phone.trim();
+    if (memberData.address !== undefined) memberRow.address = memberData.address.trim();
     if (memberData.password !== undefined) memberRow.password = memberData.password;
 
     if (this.isSupabase) {
@@ -473,6 +483,8 @@ class SupabaseLibraryDB {
         username: data.username,
         name: data.name,
         email: data.email,
+        phone: data.phone,
+        address: data.address,
         password: data.password,
         createdAt: data.created_at
       };
